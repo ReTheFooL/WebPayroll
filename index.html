@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebPayroll</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --primary: #3867d6;
+            --secondary: #4b7bec;
+            --text: #2f3640;
+            --muted: #718093;
+            --border: #dcdde1;
+            --success: #34c759;
+            --danger: #ff4757;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Sarabun", "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #e9effb 0%, #f7fafc 100%);
+            color: var(--text);
+        }
+
+        .page {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .topbar h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 2.2vw, 2.6rem);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(56, 103, 214, 0.14);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .layout-2 {
+            grid-template-columns: 0.7fr 1.3fr;
+        }
+
+        .layout-2 > section:first-child {
+            max-width: 540px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 22px 50px rgba(82, 88, 119, 0.08);
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            font-size: 1.2rem;
+            color: var(--text);
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .form-row.sm {
+            grid-template-columns: 1fr;
+        }
+
+        label {
+            display: block;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #f8fbff;
+            color: var(--text);
+            font-size: 0.96rem;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(75, 124, 236, 0.16);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+
+        .table th,
+        .table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eceef1;
+            font-size: 0.95rem;
+        }
+
+        .table th {
+            color: var(--muted);
+            font-weight: 600;
+            background: #fafbff;
+        }
+
+        .table tbody tr:hover {
+            background: #f5f8ff;
+        }
+
+        .section-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--muted);
+            background: #f4f7fb;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: rgba(56, 103, 214, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .button,
+        .button--secondary {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 18px;
+            font-size: 0.98rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .button {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 14px 30px rgba(56, 103, 214, 0.18);
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .button--secondary {
+            background: #ffffff;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .stat-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-top: 18px;
+        }
+
+        .stat-card {
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid #e5e8f2;
+            background: #fbfcff;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .stat-card span {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .compact-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .compact-grid .card {
+            padding: 18px;
+        }
+
+        .form-controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .checkbox-group input {
+            width: auto;
+            margin: 0;
+        }
+
+        @media (max-width: 960px) {
+            .layout-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-grid,
+            .compact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="topbar">
+            <div>
+                <span class="badge">ระบบเงินเดือนพนักงาน</span>
+                <p style="margin: 8px 0 0; color: var(--muted);">จัดการข้อมูลพนักงาน คำนวณเงินเดือน และดูรายการรับจ่ายอย่างสะดวก</p>
+            </div>
+            <div class="actions">
+                <button class="button">เก็บข้อมูล</button>
+                <button class="button--secondary">Save ทั้งหมด</button>
+                <button class="button--secondary" style="color: var(--danger); border-color: rgba(255, 71, 87, 0.2);">ออกจากระบบ</button>
+            </div>
+        </div>
+
+        <div class="grid layout-2">
+            <section class="card">
+                <h2>ค้นหาพนักงาน</h2>
+                <div class="form-grid">
+                    <div class="form-row">
+                        <div>
+                            <label for="companyId">รหัสบริษัท</label>
+                            <input id="companyId" type="text" value="0" />
+                        </div>
+                        <div>
+                            <label for="department">ฝ่าย</label>
+                            <select id="department">
+                                <option>ฝ่ายการเงิน</option>
+                                <option>ฝ่ายบุคคล</option>
+                                <option>ฝ่ายไอที</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="division">แผนก</label>
+                            <select id="division">
+                                <option>แผนกบัญชี</option>
+                                <option>แผนกอสังหาริมทรัพย์</option>
+                                <option>แผนกสนับสนุน</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="employeeType">ประเภทพนักงาน</label>
+                            <select id="employeeType">
+                                <option>ประจำ</option>
+                                <option>สัญญาจ้าง</option>
+                                <option>พาร์ทไทม์</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="searchName">ชื่อ / ค้นหา</label>
+                            <input id="searchName" type="text" placeholder="ชื่อนามสกุล หรือรหัสพนักงาน" />
+                        </div>
+                        <div class="checkbox-group">
+                            <input id="useFilter" type="checkbox" />
+                            <label for="useFilter">คัดกรองข้อมูล</label>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>รหัส</th>
+                            <th>ชื่อ - สกุล</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>001</td>
+                            <td>สมชาย ใจดี</td>
+                        </tr>
+                        <tr>
+                            <td>002</td>
+                            <td>นฤเบศร์ สุขใจ</td>
+                        </tr>
+                        <tr>
+                            <td>003</td>
+                            <td>ปรียานุช แสงทอง</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="card">
+                <h2>ข้อมูลเงินเดือนพนักงาน</h2>
+                <div class="section-tabs">
+                    <div class="tab active">เงินได้</div>
+                    <div class="tab">ค่าลดหย่อน</div>
+                    <div class="tab">ค่าตอบแทนเพิ่มเติม</div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-row">
+                        <div>
+                            <label for="employeeName">ชื่อพนักงาน</label>
+                            <input id="employeeName" type="text" placeholder="พนักงานตัวอย่าง" />
+                        </div>
+                        <div>
+                            <label for="position">ตำแหน่ง</label>
+                            <input id="position" type="text" placeholder="ผู้จัดการ" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="employmentType">ประเภทพนักงาน</label>
+                            <input id="employmentType" type="text" value="ประจำ" />
+                        </div>
+                        <div>
+                            <label for="salary">ค่าจ้าง</label>
+                            <input id="salary" type="text" value="25,000" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="startDate">วันที่เริ่มงาน</label>
+                            <input id="startDate" type="date" />
+                        </div>
+                        <div>
+                            <label for="taxRate">ภาษี</label>
+                            <input id="taxRate" type="text" value="3%" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="year">ปี</label>
+                            <select id="year">
+                                <option>2569</option>
+                                <option>2568</option>
+                                <option>2567</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="month">เดือน</label>
+                            <select id="month">
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-controls">
+                        <label class="checkbox-group">
+                            <input type="checkbox" /> บริษัทจ่ายออกภาษีให้
+                        </label>
+                        <label class="checkbox-group">
+                            <input type="checkbox" /> ได้รับเงินก่อนรวมภาษีแล้ว
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="installments">จำนวนงวดเงินให้ต่อปี</label>
+                            <select id="installments">
+                                <option>12</option>
+                                <option>6</option>
+                                <option>24</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="firstPayment">เงินเดือนที่ได้รับจ่ายครั้งแรก</label>
+                            <input id="firstPayment" type="text" placeholder="25,000" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <strong>฿25,000</strong>
+                        <span>เงินเดือนประจำ</span>
+                    </div>
+                    <div class="stat-card">
+                        <strong>฿750</strong>
+                        <span>ภาษี 3%</span>
+                    </div>
+                    <div class="stat-card">
+                        <strong>฿24,250</strong>
+                        <span>เงินรับสุทธิ</span>
+                    </div>
+                </div>
+
+                <div class="compact-grid" style="margin-top: 18px;">
+                    <div class="card">
+                        <h3 style="margin-top:0; font-size:1rem;">รายการรับ</h3>
+                        <div class="form-row sm">
+                            <div>
+                                <label>รายการ 1</label>
+                                <select>
+                                    <option>เงินเดือน</option>
+                                    <option>โบนัส</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>จำนวน</label>
+                                <input type="text" placeholder="0" />
+                            </div>
+                        </div>
+                        <div class="form-row sm" style="margin-top: 12px;">
+                            <div>
+                                <label>รายการ 2</label>
+                                <select>
+                                    <option>ค่าคอมมิชชั่น</option>
+                                    <option>เงินเพิ่ม</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>จำนวน</label>
+                                <input type="text" placeholder="0" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-top:0; font-size:1rem;">รายการหัก</h3>
+                        <div class="form-row sm">
+                            <div>
+                                <label>รายการ 1</label>
+                                <select>
+                                    <option>เงินสมทบ</option>
+                                    <option>ค่าเบี้ยเลี้ยง</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>จำนวน</label>
+                                <input type="text" placeholder="0" />
+                            </div>
+                        </div>
+                        <div class="form-row sm" style="margin-top: 12px;">
+                            <div>
+                                <label>รายการ 2</label>
+                                <select>
+                                    <option>เงินหักอื่น</option>
+                                    <option>ค่าเดินทาง</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>จำนวน</label>
+                                <input type="text" placeholder="0" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
