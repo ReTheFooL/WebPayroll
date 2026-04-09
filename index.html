@@ -98,7 +98,7 @@
         }
 
         .form-row.sm {
-            grid-template-columns: 1fr;
+            grid-template-columns: 7fr 3fr;
         }
 
         label {
@@ -154,6 +154,7 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            margin-top: 24px;
             margin-bottom: 20px;
         }
 
@@ -209,7 +210,7 @@
         .stat-grid {
             display: grid;
             gap: 16px;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             margin-top: 18px;
         }
 
@@ -240,6 +241,24 @@
 
         .compact-grid .card {
             padding: 18px;
+        }
+
+        .tab-content {
+            margin-top: 18px;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.18s ease-in-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.85; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .form-controls {
@@ -369,12 +388,6 @@
 
             <section class="card">
                 <h2>ข้อมูลเงินเดือนพนักงาน</h2>
-                <div class="section-tabs">
-                    <div class="tab active">เงินได้</div>
-                    <div class="tab">ค่าลดหย่อน</div>
-                    <div class="tab">ค่าตอบแทนเพิ่มเติม</div>
-                </div>
-
                 <div class="form-grid">
                     <div class="form-row">
                         <div>
@@ -393,48 +406,9 @@
                             <input id="employmentType" type="text" value="ประจำ" />
                         </div>
                         <div>
-                            <label for="salary">ค่าจ้าง</label>
-                            <input id="salary" type="text" value="25,000" />
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div>
                             <label for="startDate">วันที่เริ่มงาน</label>
                             <input id="startDate" type="date" />
                         </div>
-                        <div>
-                            <label for="taxRate">ภาษี</label>
-                            <input id="taxRate" type="text" value="3%" />
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div>
-                            <label for="year">ปี</label>
-                            <select id="year">
-                                <option>2569</option>
-                                <option>2568</option>
-                                <option>2567</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="month">เดือน</label>
-                            <select id="month">
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-controls">
-                        <label class="checkbox-group">
-                            <input type="checkbox" /> บริษัทจ่ายออกภาษีให้
-                        </label>
-                        <label class="checkbox-group">
-                            <input type="checkbox" /> ได้รับเงินก่อนรวมภาษีแล้ว
-                        </label>
                     </div>
 
                     <div class="form-row">
@@ -453,78 +427,129 @@
                     </div>
                 </div>
 
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <strong>฿25,000</strong>
-                        <span>เงินเดือนประจำ</span>
-                    </div>
-                    <div class="stat-card">
-                        <strong>฿750</strong>
-                        <span>ภาษี 3%</span>
-                    </div>
-                    <div class="stat-card">
-                        <strong>฿24,250</strong>
-                        <span>เงินรับสุทธิ</span>
-                    </div>
+                <div class="section-tabs">
+                    <div class="tab active" data-target="incomeTab">รายรับ</div>
+                    <div class="tab" data-target="deductTab">รายการหัก</div>
                 </div>
 
-                <div class="compact-grid" style="margin-top: 18px;">
-                    <div class="card">
-                        <h3 style="margin-top:0; font-size:1rem;">รายการรับ</h3>
-                        <div class="form-row sm">
-                            <div>
-                                <label>รายการ 1</label>
-                                <select>
-                                    <option>เงินเดือน</option>
-                                    <option>โบนัส</option>
-                                </select>
+                <div class="tab-content">
+                    <div class="tab-panel active" id="incomeTab">
+                        <div class="card">
+                            <h3 style="margin-top:0; font-size:1rem;">รายการรับ</h3>
+                            <div class="form-row sm">
+                                <div>
+                                    <select>
+                                        <option>เงินเดือน</option>
+                                        <option>โบนัส</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
-                            <div>
-                                <label>จำนวน</label>
-                                <input type="text" placeholder="0" />
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>ค่าคอมมิชชั่น</option>
+                                        <option>เงินเพิ่ม</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row sm" style="margin-top: 12px;">
-                            <div>
-                                <label>รายการ 2</label>
-                                <select>
-                                    <option>ค่าคอมมิชชั่น</option>
-                                    <option>เงินเพิ่ม</option>
-                                </select>
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>ค่าล่วงเวลา</option>
+                                        <option>เงินพิเศษ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
-                            <div>
-                                <label>จำนวน</label>
-                                <input type="text" placeholder="0" />
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>เงินบำรุง</option>
+                                        <option>เงินช่วยเหลือ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
+                            </div>
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>เงินอื่นๆ</option>
+                                        <option>โบนัสพิเศษ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="card">
-                        <h3 style="margin-top:0; font-size:1rem;">รายการหัก</h3>
-                        <div class="form-row sm">
-                            <div>
-                                <label>รายการ 1</label>
-                                <select>
-                                    <option>เงินสมทบ</option>
-                                    <option>ค่าเบี้ยเลี้ยง</option>
-                                </select>
+                    <div class="tab-panel" id="deductTab">
+                        <div class="card">
+                            <h3 style="margin-top:0; font-size:1rem;">รายการหัก</h3>
+                            <div class="form-row sm">
+                                <div>
+                                    <select>
+                                        <option>เงินสมทบ</option>
+                                        <option>ค่าเบี้ยเลี้ยง</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
-                            <div>
-                                <label>จำนวน</label>
-                                <input type="text" placeholder="0" />
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>เงินหักอื่น</option>
+                                        <option>ค่าเดินทาง</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row sm" style="margin-top: 12px;">
-                            <div>
-                                <label>รายการ 2</label>
-                                <select>
-                                    <option>เงินหักอื่น</option>
-                                    <option>ค่าเดินทาง</option>
-                                </select>
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>ภาษี</option>
+                                        <option>ประกันสังคม</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
-                            <div>
-                                <label>จำนวน</label>
-                                <input type="text" placeholder="0" />
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>เงินกู้</option>
+                                        <option>ค่าปรับ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
+                            </div>
+                            <div class="form-row sm" style="margin-top: 12px;">
+                                <div>
+                                    <select>
+                                        <option>เงินหักอื่นๆ</option>
+                                        <option>ค่าใช้จ่าย</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" placeholder="จำนวน" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -532,5 +557,19 @@
             </section>
         </div>
     </div>
+    <script>
+        const tabButtons = document.querySelectorAll('.section-tabs .tab');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                if (!targetId) return;
+
+                tabButtons.forEach(btn => btn.classList.toggle('active', btn === button));
+                tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
+            });
+        });
+    </script>
 </body>
 </html>
