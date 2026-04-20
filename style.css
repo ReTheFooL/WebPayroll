@@ -356,6 +356,13 @@ input:disabled {
     border: 1px solid var(--border);
 }
 
+.button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
 .button--secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;

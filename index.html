@@ -131,7 +131,7 @@
                             </div>
                             <div>
                                 <label for="firstPayment">เงินเดือนที่ได้รับจ่ายครั้งแรก</label>
-                                <input id="firstPayment" type="text" placeholder="25,000" />
+                                <input id="firstPayment" type="text" placeholder="0.00" />
                             </div>
                         </div>
                     </div>
@@ -444,7 +444,7 @@
                                     </div>
                                 </div>
                                 <div class="form-controls" style="margin-top: 20px; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                                    <button class="button" type="button">คำนวณภาษี</button>
+                                    <button class="button" type="button" id="calcTaxBtn" disabled>คำนวณภาษี</button>
                                     <button class="button--secondary" type="button" id="sumDeductionsBtn">รวมค่าลดหย่อน</button>
                                     <input id="deductionTotal" type="text" readonly placeholder="ผลรวมค่าลดหย่อน" style="width: 40%; max-width: 240px;" />
                                 </div>
@@ -455,7 +455,77 @@
             </section>
         </div>
     </div>
+    <!-- Modal ประกันสังคม -->
+    <div id="socialSecurityModal" style="display:none; position:fixed; inset:0; background:rgba(47,54,64,0.5); z-index:9999; align-items:center; justify-content:center; font-family:'Sarabun','Segoe UI',sans-serif;">
+        <div style="background:#ffffff; border:1px solid #dcdde1; border-radius:22px; width:360px; box-shadow:0 22px 50px rgba(82,88,119,0.18); overflow:hidden;">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#3867d6,#4b7bec); padding:18px 24px; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.2rem;">🗂️</span>
+                <span style="color:#fff; font-size:1.05rem; font-weight:600;">กรุณาเลือกงวดที่เหลือ</span>
+            </div>
+            <!-- Body -->
+            <div style="padding:28px 28px 24px; display:grid; gap:18px;">
+                <div>
+                    <label style="display:block; font-size:0.95rem; margin-bottom:6px; color:#718093;">กรุณาเลือกงวดที่เหลือ</label>
+                    <select id="modalInstallment" style="width:100%; padding:12px 14px; border:1px solid #dcdde1; border-radius:14px; background:#f8fbff; color:#2f3640; font-size:0.96rem; appearance:none; background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23718093' d='M0 0l5 6 5-6Z'/%3E%3C/svg%3E\"); background-repeat:no-repeat; background-position:right 16px center;">
+                        <option>1</option><option>2</option><option>3</option><option>4</option>
+                        <option>5</option><option>6</option><option>7</option><option>8</option>
+                        <option>9</option><option>10</option><option>11</option>
+                        <option selected>12</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.95rem; margin-bottom:6px; color:#718093;">ปีภาษี</label>
+                    <select id="modalYear" style="width:100%; padding:12px 14px; border:1px solid #dcdde1; border-radius:14px; background:#f8fbff; color:#2f3640; font-size:0.96rem; appearance:none; background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23718093' d='M0 0l5 6 5-6Z'/%3E%3C/svg%3E\"); background-repeat:no-repeat; background-position:right 16px center;"></select>
+                </div>
+                <div style="display:flex; gap:12px; margin-top:4px;">
+                    <button id="modalConfirmBtn" style="flex:1; background:#3867d6; color:#fff; border:none; border-radius:14px; padding:12px 18px; font-size:0.98rem; font-family:inherit; cursor:pointer; box-shadow:0 14px 30px rgba(56,103,214,0.18); transition:transform 0.2s;">ยืนยัน</button>
+                    <button id="modalCancelBtn" style="flex:1; background:#ffffff; color:#2f3640; border:1px solid #dcdde1; border-radius:14px; padding:12px 18px; font-size:0.98rem; font-family:inherit; cursor:pointer; transition:transform 0.2s;">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ---- Modal ประกันสังคม ----
+        const socialSecurityModal = document.getElementById('socialSecurityModal');
+        const modalInstallment = document.getElementById('modalInstallment');
+        const modalYear = document.getElementById('modalYear');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+        // เติมปีภาษี (พ.ศ. ปัจจุบัน ± 2)
+        const currentYear = new Date().getFullYear() + 543;
+        for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === currentYear) opt.selected = true;
+            modalYear.appendChild(opt);
+        }
+
+        function showSocialSecurityModal() {
+            socialSecurityModal.style.display = 'flex';
+        }
+
+        modalCancelBtn.addEventListener('click', function() {
+            socialSecurityModal.style.display = 'none';
+        });
+
+        modalConfirmBtn.addEventListener('click', function() {
+            const installment = modalInstallment.value;
+            const year = modalYear.value;
+            socialSecurityModal.style.display = 'none';
+            // TODO: ใช้ค่า installment และ year ในการคำนวณต่อไป
+            console.log('งวดที่เหลือ:', installment, 'ปีภาษี:', year);
+        });
+
+        // ปิด modal เมื่อคลิก overlay
+        socialSecurityModal.addEventListener('click', function(e) {
+            if (e.target === socialSecurityModal) socialSecurityModal.style.display = 'none';
+        });
+        // ---- End Modal ----
+
         const tabButtons = document.querySelectorAll('.section-tabs .tab');
         const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -482,7 +552,7 @@
 
         // เพิ่ม event สำหรับปุ่มยืนยันประกันสังคม
         confirmSocialSecurityBtn.addEventListener('click', function() {
-            alert('test');
+            showSocialSecurityModal();
         });
 
         // จัดการกองทุนสำรองเลี้ยงชีพ
@@ -511,10 +581,16 @@
 
         const sumDeductionsBtn = document.getElementById('sumDeductionsBtn');
         const deductionTotalInput = document.getElementById('deductionTotal');
+        const calcTaxBtn = document.getElementById('calcTaxBtn');
 
         const parseValue = value => {
             const number = parseFloat(value.replace(/,/g, '').trim());
             return Number.isFinite(number) ? number : 0;
+        };
+
+        const updateCalcTaxBtn = () => {
+            const total = parseValue(deductionTotalInput.value);
+            calcTaxBtn.disabled = total === 0;
         };
 
         const calculateDeductions = () => {
@@ -523,6 +599,7 @@
             const allInputs = deductInputs.concat(additionalInputs).filter(input => !input.hasAttribute('readonly'));
             const total = allInputs.reduce((sum, input) => sum + parseValue(input.value), 0);
             deductionTotalInput.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            updateCalcTaxBtn();
         };
 
         sumDeductionsBtn.addEventListener('click', calculateDeductions);
