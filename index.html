@@ -5,604 +5,614 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebPayroll</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .toast { position:fixed; bottom:28px; right:28px; background:#2f3640; color:#fff; padding:14px 22px; border-radius:14px; font-size:0.95rem; z-index:99999; opacity:0; transform:translateY(10px); transition:all 0.3s ease; pointer-events:none; }
+        .toast.show { opacity:1; transform:translateY(0); }
+        .toast.success { background:#34c759; }
+        .toast.error   { background:#ff4757; }
+        #empTableBody tr { cursor:pointer; }
+        #empTableBody tr.selected { background:#eef2ff !important; font-weight:600; }
+        .saving-indicator { display:none; font-size:0.85rem; color:var(--muted); margin-left:8px; }
+        .saving-indicator.visible { display:inline; }
+    </style>
 </head>
 <body>
-    <div class="page">
-        <div class="topbar">
-            <div>
-                <span class="badge">ระบบเงินเดือนพนักงาน</span>
-                <p style="margin: 8px 0 0; color: var(--muted);">จัดการข้อมูลพนักงาน คำนวณเงินเดือน และดูรายการรับจ่ายอย่างสะดวก</p>
-            </div>
-            <div class="actions">
-                <button class="button">เก็บข้อมูล</button>
-                <button class="button--secondary">Save ทั้งหมด</button>
-                <button class="button--secondary" style="color: var(--danger); border-color: rgba(255, 71, 87, 0.2);">ออกจากระบบ</button>
-            </div>
+<div class="page">
+    <div class="topbar">
+        <div>
+            <span class="badge">ระบบเงินเดือนพนักงาน</span>
+            <p style="margin:8px 0 0; color:var(--muted);">จัดการข้อมูลพนักงาน คำนวณเงินเดือน และดูรายการรับจ่ายอย่างสะดวก</p>
         </div>
+        <div class="actions">
+            <button class="button" id="btnSave">💾 บันทึก</button>
+            <button class="button--secondary" id="btnExport">📤 Export JSON</button>
+            <button class="button--secondary" id="btnImportTrigger">📥 Import JSON</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" />
+        </div>
+    </div>
 
-        <div class="grid layout-2">
-            <section class="card">
-                <h2>ค้นหาพนักงาน</h2>
+    <div class="grid layout-2">
+        <!-- ─── ซ้าย: ค้นหา + ตารางพนักงาน ─── -->
+        <section class="card">
+            <h2>ค้นหาพนักงาน</h2>
+            <div class="form-grid">
+                <div class="form-row">
+                    <div>
+                        <label for="filterDept">ฝ่าย</label>
+                        <select id="filterDept"><option value="">-- ทั้งหมด --</option></select>
+                    </div>
+                    <div>
+                        <label for="filterDiv">แผนก</label>
+                        <select id="filterDiv"><option value="">-- ทั้งหมด --</option></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label for="filterType">ประเภทพนักงาน</label>
+                        <select id="filterType">
+                            <option value="">-- ทั้งหมด --</option>
+                            <option>ประจำ</option>
+                            <option>สัญญาจ้าง</option>
+                            <option>พาร์ทไทม์</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="searchName">ชื่อ / รหัสพนักงาน</label>
+                        <input id="searchName" type="text" placeholder="ค้นหา..." />
+                    </div>
+                </div>
+            </div>
+            <table class="table" style="margin-top:14px;">
+                <thead><tr><th>รหัส</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th></tr></thead>
+                <tbody id="empTableBody">
+                    <tr><td colspan="3" style="text-align:center;color:var(--muted);">กำลังโหลด...</td></tr>
+                </tbody>
+            </table>
+            <div class="actions" style="margin-top:14px;">
+                <button class="button--secondary small" id="btnNewEmp">+ เพิ่มพนักงาน</button>
+            </div>
+        </section>
+
+        <!-- ─── ขวา: ข้อมูลเงินเดือน ─── -->
+        <section class="card" id="detailPanel">
+            <h2>ข้อมูลเงินเดือนพนักงาน <span class="saving-indicator" id="savingIndicator">⏳ กำลังบันทึก...</span></h2>
+            <div class="card details-card">
                 <div class="form-grid">
                     <div class="form-row">
                         <div>
-                            <label for="companyId">รหัสบริษัท</label>
-                            <input id="companyId" type="text" value="0" />
+                            <label for="empCode">รหัสพนักงาน</label>
+                            <input id="empCode" type="text" placeholder="EMP001" />
                         </div>
                         <div>
-                            <label for="department">ฝ่าย</label>
-                            <select id="department">
-                                <option>ฝ่ายการเงิน</option>
-                                <option>ฝ่ายบุคคล</option>
-                                <option>ฝ่ายไอที</option>
-                            </select>
+                            <label for="employeeName">ชื่อพนักงาน</label>
+                            <input id="employeeName" type="text" placeholder="ชื่อ-นามสกุล" />
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div>
-                            <label for="division">แผนก</label>
-                            <select id="division">
-                                <option>แผนกบัญชี</option>
-                                <option>แผนกอสังหาริมทรัพย์</option>
-                                <option>แผนกสนับสนุน</option>
-                            </select>
+                            <label for="position">ตำแหน่ง</label>
+                            <input id="position" type="text" placeholder="ผู้จัดการ" />
                         </div>
                         <div>
-                            <label for="employeeType">ประเภทพนักงาน</label>
-                            <select id="employeeType">
+                            <label for="employmentType">ประเภทพนักงาน</label>
+                            <select id="employmentType">
                                 <option>ประจำ</option>
                                 <option>สัญญาจ้าง</option>
                                 <option>พาร์ทไทม์</option>
                             </select>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div>
-                            <label for="searchName">ชื่อ / ค้นหา</label>
-                            <input id="searchName" type="text" placeholder="ชื่อนามสกุล หรือรหัสพนักงาน" />
+                            <label for="startDate">วันที่เริ่มงาน</label>
+                            <input id="startDate" type="date" />
                         </div>
-                        <div class="checkbox-group">
-                            <input id="useFilter" type="checkbox" />
-                            <label for="useFilter">คัดกรองข้อมูล</label>
+                        <div>
+                            <label for="firstPayment">เงินเดือนครั้งแรก</label>
+                            <input id="firstPayment" type="text" placeholder="25,000" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label for="deptSelect">ฝ่าย</label>
+                            <select id="deptSelect"><option value="">-- เลือกฝ่าย --</option></select>
+                        </div>
+                        <div>
+                            <label for="divSelect">แผนก</label>
+                            <select id="divSelect"><option value="">-- เลือกแผนก --</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label for="installments">งวดต่อปี</label>
+                            <select id="installments">
+                                <option value="12">12</option>
+                                <option value="6">6</option>
+                                <option value="24">24</option>
+                            </select>
                         </div>
                     </div>
                 </div>
-
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>รหัส</th>
-                            <th>ชื่อ - สกุล</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>001</td>
-                            <td>สมชาย ใจดี</td>
-                        </tr>
-                        <tr>
-                            <td>002</td>
-                            <td>นฤเบศร์ สุขใจ</td>
-                        </tr>
-                        <tr>
-                            <td>003</td>
-                            <td>ปรียานุช แสงทอง</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="card">
-                <h2>ข้อมูลเงินเดือนพนักงาน</h2>
-                <div class="card details-card">
-                    <div class="form-grid">
-                        <div class="form-row">
-                            <div>
-                                <label for="employeeName">ชื่อพนักงาน</label>
-                                <input id="employeeName" type="text" placeholder="พนักงานตัวอย่าง" />
-                            </div>
-                            <div>
-                                <label for="position">ตำแหน่ง</label>
-                                <input id="position" type="text" placeholder="ผู้จัดการ" />
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div>
-                                <label for="employmentType">ประเภทพนักงาน</label>
-                                <input id="employmentType" type="text" value="ประจำ" />
-                            </div>
-                            <div>
-                                <label for="startDate">วันที่เริ่มงาน</label>
-                                <input id="startDate" type="date" />
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div>
-                                <label for="installments">จำนวนงวดเงินให้ต่อปี</label>
-                                <select id="installments">
-                                    <option>12</option>
-                                    <option>6</option>
-                                    <option>24</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="firstPayment">เงินเดือนที่ได้รับจ่ายครั้งแรก</label>
-                                <input id="firstPayment" type="text" placeholder="0.0" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section-tabs">
-                    <div class="tab active" data-target="incomeTab">รายรับ</div>
-                    <div class="tab" data-target="deductTab">รายการหัก</div>
-                    <div class="tab" data-target="deductionTab">ค่าลดหย่อน</div>
-                    <div class="tab" data-target="additionalDeductionTab">ค่าลดหย่อนเพิ่มเติม</div>
-                </div>
-
-                <div class="tab-content">
-                    <div class="tab-panel active" id="incomeTab">
-                        <div class="card">
-                            <h3 style="margin-top:0; font-size:1rem;">รายการรับ</h3>
-                            <div class="form-row sm">
-                                <div>
-                                    <select>
-                                        <option>เงินเดือน</option>
-                                        <option>โบนัส</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
-                                </div>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>ค่าคอมมิชชั่น</option>
-                                        <option>เงินเพิ่ม</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
-                                </div>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>ค่าล่วงเวลา</option>
-                                        <option>เงินพิเศษ</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
-                                </div>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>เงินบำรุง</option>
-                                        <option>เงินช่วยเหลือ</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
-                                </div>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>เงินอื่นๆ</option>
-                                        <option>โบนัสพิเศษ</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab-panel" id="deductTab">
-                        <div class="card">
-                            <h3 style="margin-top:0; font-size:1rem;">รายการหัก</h3>
-                            <div class="deduct-grid">
-                                <div class="deduct-items">
-                                    <div class="form-row sm">
-                                        <div>
-                                            <select>
-                                                <option>เงินสมทบ</option>
-                                                <option>ค่าเบี้ยเลี้ยง</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="จำนวน" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row sm" style="margin-top: 12px;">
-                                        <div>
-                                            <select>
-                                                <option>เงินหักอื่น</option>
-                                                <option>ค่าเดินทาง</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="จำนวน" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row sm" style="margin-top: 12px;">
-                                        <div>
-                                            <select>
-                                                <option>ภาษี</option>
-                                                <option>ประกันสังคม</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="จำนวน" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row sm" style="margin-top: 12px;">
-                                        <div>
-                                            <select>
-                                                <option>เงินกู้</option>
-                                                <option>ค่าปรับ</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="จำนวน" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row sm" style="margin-top: 12px;">
-                                        <div>
-                                            <select>
-                                                <option>เงินหักอื่นๆ</option>
-                                                <option>ค่าใช้จ่าย</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="จำนวน" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <aside class="deduct-meta">
-                                    <div class="meta-section">
-                                        <div class="checkbox-group">
-                                            <input id="socialSecurity" type="checkbox" />
-                                            <label for="socialSecurity">คำนวณประกันสังคม</label>
-                                        </div>
-                                        <button class="button--secondary small" id="confirmSocialSecurity">ยืนยันประกันสังคม</button>
-                                    </div>
-                                    <div class="meta-section">
-                                        <div class="checkbox-group">
-                                            <input id="providentFund" type="checkbox" />
-                                            <label for="providentFund">คำนวณกองทุนสำรองเลี้ยงชีพ</label>
-                                        </div>
-                                        <div class="form-row sm meta-row" style="margin-top: 10px;">
-                                            <div style="display: flex; gap: 8px; align-items: center;">
-                                                <input id="providentRate" type="text" placeholder="อัตรา (%)" style="flex: 1;" />
-                                                <button class="button--secondary small" id="confirmProvidentFund">ยืนยันสำรองเลี้ยงชีพ</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </aside>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 18px;">
-                                <div>
-                                    <label for="fundMemberCode">รหัสสมาชิกกองทุน</label>
-                                    <input id="fundMemberCode" type="text" placeholder="รหัสสมาชิกกองทุน" />
-                                </div>
-                                <div>
-                                    <label for="fundStartDate">วันที่สมัครกองทุน</label>
-                                    <input id="fundStartDate" type="date" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab-panel" id="deductionTab">
-                        <div class="card">
-                            <h3 style="margin-top:0; font-size:1rem;">ค่าลดหย่อน</h3>
-                            <div class="deduction-list">
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>1. ผู้มีเงินได้ 60,000 บาท</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" value="60,000.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>2. คู่สมรส (กรณีไม่มีรายได้) 60,000 บาท</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>3. บุตรคนละ 30,000 บาท ไม่จำกัดจำนวนบุตร</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>4. เบี้ยประกันชีวิต</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>5. เงินสะสม (กองทุนเลี้ยงชีพ) ส่วนที่ไม่เกิน 10,000 บาท</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>6. ค่าซื้อหน่วยลงทุนในกองทุนรวมเพื่อการเลี้ยงชีพ</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>7. ดอกเบี้ยเงินกู้</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>8. เงินสมทบ (ประกันสังคม)</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px;">
-                                    <div>
-                                        <label>9. เงินบริจาค</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-row" style="margin-top: 12px; margin-bottom: 4px;">
-                                    <div>
-                                        <label>10. ค่าซื้อหน่วยลงทุนในกองทุนรวมหุ้นระยะยาว</label>
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab-panel" id="additionalDeductionTab">
-                        <div class="card">
-                            <h3 style="margin-top:0; font-size:1rem;">ค่าลดหย่อนเพิ่มเติม</h3>
-                            <div class="additional-deduction-grid">
-                                <div class="form-row four" style="margin-top: 16px;">
-                                    <div>
-                                        <label>บิดา/ผู้มีเงินได้</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>มารดาผู้มีเงินได้</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>บิดาคู่สมรส</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>มารดาคู่สมรส</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="deduction-divider"><span>เบี้ยประกันสุขภาพ</span></div>
-                                <div class="form-row four" style="margin-top: 16px;">
-                                    <div>
-                                        <label>บิดาผู้มีเงินได้</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>มารดาผู้มีเงินได้</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>บิดาคู่สมรส</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>มารดาคู่สมรส</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="deduction-divider"></div>
-                                <div class="form-row three" style="margin-top: 16px;">
-                                    <div>
-                                        <label>อุปการะคนพิการ</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>เบี้ยประกันชีวิตแบบบำนาญ</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                    <div>
-                                        <label>อื่นๆ</label>
-                                        <input type="text" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div class="form-controls" style="margin-top: 20px; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                                    <button class="button" type="button" id="calcTaxBtn" disabled>คำนวณภาษี</button>
-                                    <button class="button--secondary" type="button" id="sumDeductionsBtn">รวมค่าลดหย่อน</button>
-                                    <input id="deductionTotal" type="text" readonly placeholder="ผลรวมค่าลดหย่อน" style="width: 40%; max-width: 240px;" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </div>
-    <!-- Modal ประกันสังคม -->
-    <div id="socialSecurityModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:#c0c0c0; border:2px solid #888; border-radius:4px; width:340px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4); font-family:'Sarabun','Segoe UI',sans-serif;">
-            <!-- Title bar -->
-            <div style="background:#6b6b6b; color:#fff; padding:6px 12px; font-size:0.92rem; display:flex; align-items:center; gap:8px; border-radius:2px 2px 0 0;">
-                <span>🗂</span>
-                <span>กรุณาเลือกงวดที่เหลือ</span>
             </div>
-            <!-- Body -->
-            <div style="padding:24px 28px 20px;">
-                <p style="margin:0 0 14px; font-size:0.97rem; color:#222;">กรุณาเลือกงวดที่เหลือ</p>
-                <select id="modalInstallment" style="width:160px; padding:6px 10px; border:1px solid #888; border-radius:3px; background:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <div class="section-tabs">
+                <div class="tab active" data-target="incomeTab">รายรับ</div>
+                <div class="tab" data-target="deductTab">รายการหัก</div>
+                <div class="tab" data-target="deductionTab">ค่าลดหย่อน</div>
+                <div class="tab" data-target="additionalDeductionTab">ค่าลดหย่อนเพิ่มเติม</div>
+            </div>
+
+            <div class="tab-content">
+                <!-- รายรับ -->
+                <div class="tab-panel active" id="incomeTab">
+                    <div class="card">
+                        <h3 style="margin-top:0;font-size:1rem;">รายการรับ</h3>
+                        <div id="incomeRows"></div>
+                        <button class="button--secondary small" id="btnAddIncome" style="margin-top:12px;">+ เพิ่มรายการ</button>
+                    </div>
+                </div>
+
+                <!-- รายการหัก -->
+                <div class="tab-panel" id="deductTab">
+                    <div class="card">
+                        <h3 style="margin-top:0;font-size:1rem;">รายการหัก</h3>
+                        <div class="deduct-grid">
+                            <div>
+                                <div id="deductRows"></div>
+                                <button class="button--secondary small" id="btnAddDeduct" style="margin-top:12px;">+ เพิ่มรายการหัก</button>
+                            </div>
+                            <aside class="deduct-meta">
+                                <div class="meta-section">
+                                    <div class="checkbox-group">
+                                        <input id="socialSecurity" type="checkbox" />
+                                        <label for="socialSecurity">คำนวณประกันสังคม</label>
+                                    </div>
+                                    <button class="button--secondary small" id="confirmSocialSecurity" disabled>ยืนยันประกันสังคม</button>
+                                </div>
+                                <div class="meta-section">
+                                    <div class="checkbox-group">
+                                        <input id="providentFund" type="checkbox" />
+                                        <label for="providentFund">กองทุนสำรองเลี้ยงชีพ</label>
+                                    </div>
+                                    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+                                        <input id="providentRate" type="text" placeholder="อัตรา (%)" style="flex:1;" disabled />
+                                        <button class="button--secondary small" id="confirmProvidentFund" disabled>ยืนยัน</button>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                        <div class="form-row sm" style="margin-top:18px;">
+                            <div>
+                                <label for="fundMemberCode">รหัสสมาชิกกองทุน</label>
+                                <input id="fundMemberCode" type="text" placeholder="รหัสสมาชิกกองทุน" />
+                            </div>
+                            <div>
+                                <label for="fundStartDate">วันที่สมัครกองทุน</label>
+                                <input id="fundStartDate" type="date" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ค่าลดหย่อน -->
+                <div class="tab-panel" id="deductionTab">
+                    <div class="card">
+                        <h3 style="margin-top:0;font-size:1rem;">ค่าลดหย่อน</h3>
+                        <div class="deduction-list">
+                            <div class="form-row" style="margin-top:12px;"><div><label>1. ผู้มีเงินได้ 60,000 บาท</label></div><div><input id="d_self" type="text" value="60,000.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>2. คู่สมรส (กรณีไม่มีรายได้) 60,000 บาท</label></div><div><input id="d_spouse" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>3. บุตรคนละ 30,000 บาท ไม่จำกัดจำนวนบุตร</label></div><div><input id="d_child" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>4. เบี้ยประกันชีวิต</label></div><div><input id="d_life_ins" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>5. เงินสะสม (กองทุนเลี้ยงชีพ) ส่วนที่ไม่เกิน 10,000 บาท</label></div><div><input id="d_provident" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>6. ค่าซื้อหน่วยลงทุนในกองทุนรวมเพื่อการเลี้ยงชีพ</label></div><div><input id="d_rmf" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>7. ดอกเบี้ยเงินกู้</label></div><div><input id="d_loan_int" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>8. เงินสมทบ (ประกันสังคม)</label></div><div><input id="d_social" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;"><div><label>9. เงินบริจาค</label></div><div><input id="d_donate" type="text" placeholder="0.00" /></div></div>
+                            <div class="form-row" style="margin-top:12px;margin-bottom:4px;"><div><label>10. ค่าซื้อหน่วยลงทุนในกองทุนรวมหุ้นระยะยาว</label></div><div><input id="d_ltf" type="text" placeholder="0.00" /></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ค่าลดหย่อนเพิ่มเติม -->
+                <div class="tab-panel" id="additionalDeductionTab">
+                    <div class="card">
+                        <h3 style="margin-top:0;font-size:1rem;">ค่าลดหย่อนเพิ่มเติม</h3>
+                        <div class="additional-deduction-grid">
+                            <div class="form-row four" style="margin-top:16px;">
+                                <div><label>บิดา/ผู้มีเงินได้</label><input id="ad_par_tax_f" type="text" placeholder="0.00" /></div>
+                                <div><label>มารดาผู้มีเงินได้</label><input id="ad_par_tax_m" type="text" placeholder="0.00" /></div>
+                                <div><label>บิดาคู่สมรส</label><input id="ad_par_sp_f" type="text" placeholder="0.00" /></div>
+                                <div><label>มารดาคู่สมรส</label><input id="ad_par_sp_m" type="text" placeholder="0.00" /></div>
+                            </div>
+                            <div class="deduction-divider"><span>เบี้ยประกันสุขภาพ</span></div>
+                            <div class="form-row four" style="margin-top:16px;">
+                                <div><label>บิดาผู้มีเงินได้</label><input id="ad_dis_tax_f" type="text" placeholder="0.00" /></div>
+                                <div><label>มารดาผู้มีเงินได้</label><input id="ad_dis_tax_m" type="text" placeholder="0.00" /></div>
+                                <div><label>บิดาคู่สมรส</label><input id="ad_dis_sp_f" type="text" placeholder="0.00" /></div>
+                                <div><label>มารดาคู่สมรส</label><input id="ad_dis_sp_m" type="text" placeholder="0.00" /></div>
+                            </div>
+                            <div class="deduction-divider"></div>
+                            <div class="form-row three" style="margin-top:16px;">
+                                <div><label>อุปการะคนพิการ</label><input id="ad_disabled" type="text" placeholder="0.00" /></div>
+                                <div><label>เบี้ยประกันชีวิตแบบบำนาญ</label><input id="ad_pension_ins" type="text" placeholder="0.00" /></div>
+                                <div><label>อื่นๆ</label><input id="ad_other" type="text" placeholder="0.00" /></div>
+                            </div>
+                            <div class="form-controls" style="margin-top:20px;justify-content:center;gap:12px;flex-wrap:wrap;">
+                                <button class="button" type="button" id="calcTaxBtn" disabled>คำนวณภาษี</button>
+                                <button class="button--secondary" type="button" id="sumDeductionsBtn">รวมค่าลดหย่อน</button>
+                                <input id="deductionTotal" type="text" readonly placeholder="ผลรวมค่าลดหย่อน" style="width:40%;max-width:240px;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Modal ประกันสังคม -->
+<div id="socialSecurityModal" style="display:none;position:fixed;inset:0;background:rgba(47,54,64,0.5);z-index:9999;align-items:center;justify-content:center;font-family:'Sarabun','Segoe UI',sans-serif;">
+    <div style="background:#fff;border:1px solid #dcdde1;border-radius:22px;width:360px;box-shadow:0 22px 50px rgba(82,88,119,0.18);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#3867d6,#4b7bec);padding:18px 24px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.2rem;">🗂️</span>
+            <span style="color:#fff;font-size:1.05rem;font-weight:600;">กรุณาเลือกงวดที่เหลือ</span>
+        </div>
+        <div style="padding:28px 28px 24px;display:grid;gap:18px;">
+            <div>
+                <label style="display:block;font-size:0.95rem;margin-bottom:6px;color:#718093;">กรุณาเลือกงวดที่เหลือ</label>
+                <select id="modalInstallment" style="width:100%;padding:12px 14px;border:1px solid #dcdde1;border-radius:14px;background:#f8fbff;color:#2f3640;font-size:0.96rem;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27 viewBox=%270 0 10 6%27%3E%3Cpath fill=%27%23718093%27 d=%27M0 0l5 6 5-6Z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center;">
                     <option>1</option><option>2</option><option>3</option><option>4</option>
                     <option>5</option><option>6</option><option>7</option><option>8</option>
-                    <option>9</option><option>10</option><option>11</option>
-                    <option selected>12</option>
+                    <option>9</option><option>10</option><option>11</option><option selected>12</option>
                 </select>
-
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                    <label style="font-size:0.97rem; color:#222; margin:0; white-space:nowrap;">ปีภาษี</label>
-                    <select id="modalYear" style="width:120px; padding:6px 10px; border:1px solid #888; border-radius:3px; background:#fff; font-size:0.95rem;"></select>
-                </div>
-
-                <div style="display:flex; justify-content:center; gap:12px; margin-top:22px;">
-                    <button id="modalConfirmBtn" style="background:#4cd964; color:#fff; border:1px solid #2ea84f; border-radius:4px; padding:8px 32px; font-size:1rem; cursor:pointer; font-family:inherit;">ยืนยัน</button>
-                    <button id="modalCancelBtn" style="background:#ff4757; color:#fff; border:1px solid #c0392b; border-radius:4px; padding:8px 32px; font-size:1rem; cursor:pointer; font-family:inherit;">ยกเลิก</button>
-                </div>
+            </div>
+            <div>
+                <label style="display:block;font-size:0.95rem;margin-bottom:6px;color:#718093;">ปีภาษี</label>
+                <select id="modalYear" style="width:100%;padding:12px 14px;border:1px solid #dcdde1;border-radius:14px;background:#f8fbff;color:#2f3640;font-size:0.96rem;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27 viewBox=%270 0 10 6%27%3E%3Cpath fill=%27%23718093%27 d=%27M0 0l5 6 5-6Z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center;"></select>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:4px;">
+                <button id="modalConfirmBtn" style="flex:1;background:#3867d6;color:#fff;border:none;border-radius:14px;padding:12px 18px;font-size:0.98rem;font-family:inherit;cursor:pointer;box-shadow:0 14px 30px rgba(56,103,214,0.18);">ยืนยัน</button>
+                <button id="modalCancelBtn" style="flex:1;background:#fff;color:#2f3640;border:1px solid #dcdde1;border-radius:14px;padding:12px 18px;font-size:0.98rem;font-family:inherit;cursor:pointer;">ยกเลิก</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // ---- Modal ประกันสังคม ----
-        const socialSecurityModal = document.getElementById('socialSecurityModal');
-        const modalInstallment = document.getElementById('modalInstallment');
-        const modalYear = document.getElementById('modalYear');
-        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-        const modalCancelBtn = document.getElementById('modalCancelBtn');
+<!-- Toast -->
+<div id="toast" class="toast"></div>
 
-        // เติมปีภาษี (พ.ศ. ปัจจุบัน ± 2)
-        const currentYear = new Date().getFullYear() + 543;
-        for (let y = currentYear - 2; y <= currentYear + 2; y++) {
-            const opt = document.createElement('option');
-            opt.value = y;
-            opt.textContent = y;
-            if (y === currentYear) opt.selected = true;
-            modalYear.appendChild(opt);
-        }
+<script src="db.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const parseNum = v => { const n = parseFloat((v||'').toString().replace(/,/g,'')); return isFinite(n) ? n : 0; };
+const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
 
-        function showSocialSecurityModal() {
-            socialSecurityModal.style.display = 'flex';
-        }
+function toast(msg, type='success') {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 3200);
+}
 
-        modalCancelBtn.addEventListener('click', function() {
-            socialSecurityModal.style.display = 'none';
-        });
+let currentEmployeeId = null;
+let incomeTypesMaster  = [];
+let deductTypesMaster  = [];
+let allDepartments     = [];
+let allDivisions       = [];
+const COMPANY_ID = 1;
 
-        modalConfirmBtn.addEventListener('click', function() {
-            const installment = modalInstallment.value;
-            const year = modalYear.value;
-            socialSecurityModal.style.display = 'none';
-            // TODO: ใช้ค่า installment และ year ในการคำนวณต่อไป
-            console.log('งวดที่เหลือ:', installment, 'ปีภาษี:', year);
-        });
+async function boot() {
+    await DB.openDB();
+    await DB.seed();
+    incomeTypesMaster = await DB.all('income_types');
+    deductTypesMaster = await DB.all('deduction_types');
+    allDepartments    = await DB.getDepartments(COMPANY_ID);
+    allDivisions      = await DB.all('divisions');
+    populateFilterDepts();
+    populateDetailDepts();
+    await loadEmployeeList();
+}
 
-        // ปิด modal เมื่อคลิก overlay
-        socialSecurityModal.addEventListener('click', function(e) {
-            if (e.target === socialSecurityModal) socialSecurityModal.style.display = 'none';
-        });
-        // ---- End Modal ----
+// ── Dropdowns ──
+function populateFilterDepts() {
+    const sel = $('filterDept');
+    sel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+    allDepartments.forEach(d => sel.insertAdjacentHTML('beforeend',`<option value="${d.id}">${d.name}</option>`));
+}
+function populateFilterDivs(deptId) {
+    const sel = $('filterDiv');
+    sel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+    const divs = deptId ? allDivisions.filter(d=>d.department_id==deptId) : allDivisions;
+    divs.forEach(d => sel.insertAdjacentHTML('beforeend',`<option value="${d.id}">${d.name}</option>`));
+}
+function populateDetailDepts() {
+    const sel = $('deptSelect');
+    sel.innerHTML = '<option value="">-- เลือกฝ่าย --</option>';
+    allDepartments.forEach(d => sel.insertAdjacentHTML('beforeend',`<option value="${d.id}">${d.name}</option>`));
+}
+function populateDetailDivs(deptId) {
+    const sel = $('divSelect');
+    sel.innerHTML = '<option value="">-- เลือกแผนก --</option>';
+    const divs = deptId ? allDivisions.filter(d=>d.department_id==deptId) : [];
+    divs.forEach(d => sel.insertAdjacentHTML('beforeend',`<option value="${d.id}">${d.name}</option>`));
+}
 
-        const tabButtons = document.querySelectorAll('.section-tabs .tab');
-        const tabPanels = document.querySelectorAll('.tab-panel');
+$('filterDept').addEventListener('change', () => { populateFilterDivs($('filterDept').value); loadEmployeeList(); });
+$('filterDiv').addEventListener('change',  loadEmployeeList);
+$('filterType').addEventListener('change', loadEmployeeList);
+$('searchName').addEventListener('input',  loadEmployeeList);
+$('deptSelect').addEventListener('change', () => populateDetailDivs($('deptSelect').value));
 
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetId = button.dataset.target;
-                if (!targetId) return;
+// ── Employee List ──
+async function loadEmployeeList() {
+    const filters = {
+        company_id:    COMPANY_ID,
+        department_id: $('filterDept').value || undefined,
+        division_id:   $('filterDiv').value  || undefined,
+        employee_type: $('filterType').value || undefined,
+        search:        $('searchName').value || undefined,
+    };
+    const emps = await DB.getEmployees(filters);
+    const tbody = $('empTableBody');
+    if (!emps.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);">ไม่พบพนักงาน</td></tr>';
+        return;
+    }
+    tbody.innerHTML = emps.map(e=>`
+        <tr data-id="${e.id}" class="${e.id==currentEmployeeId?'selected':''}">
+            <td>${e.employee_code}</td><td>${e.full_name}</td><td>${e.position||'-'}</td>
+        </tr>`).join('');
+    tbody.querySelectorAll('tr').forEach(tr =>
+        tr.addEventListener('click', ()=> loadEmployee(parseInt(tr.dataset.id))));
+}
 
-                tabButtons.forEach(btn => btn.classList.toggle('active', btn === button));
-                tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
-            });
-        });
+// ── Load Employee ──
+async function loadEmployee(id) {
+    currentEmployeeId = id;
+    document.querySelectorAll('#empTableBody tr').forEach(tr=>tr.classList.toggle('selected',parseInt(tr.dataset.id)===id));
+    const emp = await DB.get('employees', id);
+    if (!emp) return;
 
-        // จัดการปุ่มยืนยันประกันสังคม
-        const socialSecurityCheckbox = document.getElementById('socialSecurity');
-        const confirmSocialSecurityBtn = document.getElementById('confirmSocialSecurity');
+    $('empCode').value        = emp.employee_code  || '';
+    $('employeeName').value   = emp.full_name       || '';
+    $('position').value       = emp.position        || '';
+    $('employmentType').value = emp.employee_type   || 'ประจำ';
+    $('startDate').value      = emp.start_date      || '';
+    $('firstPayment').value   = emp.first_payment ? fmt(emp.first_payment) : '';
+    $('installments').value   = emp.installments_per_year || 12;
+    $('fundMemberCode').value = emp.fund_member_code || '';
+    $('fundStartDate').value  = emp.fund_start_date  || '';
 
-        socialSecurityCheckbox.addEventListener('change', function() {
-            confirmSocialSecurityBtn.disabled = !this.checked;
-        });
+    $('socialSecurity').checked        = !!emp.social_security;
+    $('providentFund').checked         = !!emp.provident_fund;
+    $('providentRate').value           = emp.provident_rate || '';
+    $('providentRate').disabled        = !emp.provident_fund;
+    $('confirmProvidentFund').disabled  = !emp.provident_fund;
+    $('confirmSocialSecurity').disabled = !emp.social_security;
 
-        // ตั้งค่าเริ่มต้น
-        confirmSocialSecurityBtn.disabled = !socialSecurityCheckbox.checked;
+    populateDetailDepts();
+    if (emp.department_id) $('deptSelect').value = emp.department_id;
+    populateDetailDivs(emp.department_id);
+    if (emp.division_id) $('divSelect').value = emp.division_id;
 
-        // เพิ่ม event สำหรับปุ่มยืนยันประกันสังคม
-        confirmSocialSecurityBtn.addEventListener('click', function() {
-            showSocialSecurityModal();
-        });
+    await ensureDefaultPeriod();
+    const entry = await DB.getEntryFull(1, id);
+    renderIncomeRows(entry ? entry.income_items : []);
+    renderDeductRows(entry ? entry.deduction_items : []);
 
-        // จัดการกองทุนสำรองเลี้ยงชีพ
-        const providentFundCheckbox = document.getElementById('providentFund');
-        const providentRateInput = document.getElementById('providentRate');
-        const confirmProvidentFundBtn = document.getElementById('confirmProvidentFund');
+    const taxYear = new Date().getFullYear() + 543;
+    loadTaxAllowances(await DB.getTaxAllowances(id, taxYear));
+}
 
-        providentFundCheckbox.addEventListener('change', function() {
-            const isChecked = this.checked;
-            confirmProvidentFundBtn.disabled = !isChecked;
-            providentRateInput.disabled = !isChecked;
-        });
+async function ensureDefaultPeriod() {
+    const periods = await DB.all('payroll_periods');
+    if (!periods.length) await DB.put('payroll_periods',{ company_id:COMPANY_ID, period_year:new Date().getFullYear()+543, period_no:1, is_closed:0 });
+}
 
-        // ตั้งค่าเริ่มต้น
-        confirmProvidentFundBtn.disabled = !providentFundCheckbox.checked;
-        providentRateInput.disabled = !providentFundCheckbox.checked;
+// ── New Employee ──
+$('btnNewEmp').addEventListener('click', () => {
+    currentEmployeeId = null;
+    document.querySelectorAll('#empTableBody tr').forEach(tr=>tr.classList.remove('selected'));
+    ['empCode','employeeName','position','firstPayment','fundMemberCode','providentRate'].forEach(id=>$(id).value='');
+    $('startDate').value=''; $('fundStartDate').value='';
+    $('installments').value='12'; $('employmentType').value='ประจำ';
+    $('socialSecurity').checked=false; $('providentFund').checked=false;
+    $('providentRate').disabled=true; $('confirmProvidentFund').disabled=true; $('confirmSocialSecurity').disabled=true;
+    populateDetailDepts(); populateDetailDivs(null);
+    renderIncomeRows([]); renderDeductRows([]);
+    loadTaxAllowances(null);
+    $('deductionTotal').value=''; $('calcTaxBtn').disabled=true;
+    $('employeeName').focus();
+});
 
-        // เพิ่ม event สำหรับปุ่มยืนยันกองทุนสำรองเลี้ยงชีพ
-        confirmProvidentFundBtn.addEventListener('click', function() {
-            if (providentRateInput.value.trim() === '') {
-                alert('กรุณาใส่อัตรากองคำนวณกองทุนสำรองเลี้ยงชีพ');
-            } else {
-                alert('ข้อความ Test 2');
-            }
-        });
+// ── Income Rows ──
+function incomeOpts(sel=''){return incomeTypesMaster.map(t=>`<option value="${t.id}" ${t.id==sel||t.name==sel?'selected':''}>${t.name}</option>`).join('');}
+function renderIncomeRows(items){ $('incomeRows').innerHTML=''; (items.length?items:[{}]).forEach(addIncomeRow); }
+function addIncomeRow(item={}) {
+    const d=document.createElement('div'); d.className='form-row sm'; d.style.marginTop='12px';
+    d.innerHTML=`<select>${incomeOpts(item.income_type_id||item.label||'')}</select>
+    <div style="display:flex;gap:8px;"><input type="text" placeholder="จำนวน" value="${item.amount?fmt(item.amount):''}" style="flex:1;" />
+    <button type="button" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem;padding:4px 8px;" onclick="this.closest('.form-row').remove()">✕</button></div>`;
+    $('incomeRows').appendChild(d);
+}
+$('btnAddIncome').addEventListener('click',()=>addIncomeRow());
 
-        const sumDeductionsBtn = document.getElementById('sumDeductionsBtn');
-        const deductionTotalInput = document.getElementById('deductionTotal');
-        const calcTaxBtn = document.getElementById('calcTaxBtn');
+// ── Deduct Rows ──
+function deductOpts(sel=''){return deductTypesMaster.map(t=>`<option value="${t.id}" ${t.id==sel||t.name==sel?'selected':''}>${t.name}</option>`).join('');}
+function renderDeductRows(items){ $('deductRows').innerHTML=''; (items.length?items:[{}]).forEach(addDeductRow); }
+function addDeductRow(item={}) {
+    const d=document.createElement('div'); d.className='form-row sm'; d.style.marginTop='12px';
+    d.innerHTML=`<select>${deductOpts(item.deduction_type_id||item.label||'')}</select>
+    <div style="display:flex;gap:8px;"><input type="text" placeholder="จำนวน" value="${item.amount?fmt(item.amount):''}" style="flex:1;" />
+    <button type="button" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem;padding:4px 8px;" onclick="this.closest('.form-row').remove()">✕</button></div>`;
+    $('deductRows').appendChild(d);
+}
+$('btnAddDeduct').addEventListener('click',()=>addDeductRow());
 
-        const parseValue = value => {
-            const number = parseFloat(value.replace(/,/g, '').trim());
-            return Number.isFinite(number) ? number : 0;
+// ── Tax Allowances ──
+const TAX_MAP = {
+    d_self:'self_deduct', d_spouse:'spouse_deduct', d_child:'child_deduct',
+    d_life_ins:'life_insurance', d_provident:'provident_deduct', d_rmf:'rmf_deduct',
+    d_loan_int:'home_loan_interest', d_social:'social_security_deduct',
+    d_donate:'donation_deduct', d_ltf:'ltf_deduct',
+    ad_par_tax_f:'parent_taxpayer_father', ad_par_tax_m:'parent_taxpayer_mother',
+    ad_par_sp_f:'parent_spouse_father',    ad_par_sp_m:'parent_spouse_mother',
+    ad_dis_tax_f:'disabled_care_taxpayer_father', ad_dis_tax_m:'disabled_care_taxpayer_mother',
+    ad_dis_sp_f:'disabled_care_spouse_father',    ad_dis_sp_m:'disabled_care_spouse_mother',
+    ad_disabled:'disabled_support', ad_pension_ins:'pension_insurance', ad_other:'other_deduct',
+};
+function loadTaxAllowances(ta) {
+    Object.entries(TAX_MAP).forEach(([inputId, field]) => {
+        const el=$(inputId); if(!el) return;
+        const v = ta ? (ta[field]||0) : (field==='self_deduct'?60000:0);
+        el.value = v ? fmt(v) : (field==='self_deduct'?'60,000.00':'');
+    });
+}
+
+// ── Save ──
+$('btnSave').addEventListener('click', saveAll);
+async function saveAll() {
+    if (!$('employeeName').value.trim()) { toast('กรุณากรอกชื่อพนักงาน','error'); return; }
+    $('savingIndicator').classList.add('visible');
+    try {
+        const empData = {
+            ...(currentEmployeeId?{id:currentEmployeeId}:{}),
+            company_id: COMPANY_ID,
+            department_id: parseInt($('deptSelect').value)||null,
+            division_id:   parseInt($('divSelect').value) ||null,
+            employee_code: $('empCode').value.trim() || `EMP${Date.now()}`,
+            full_name:     $('employeeName').value.trim(),
+            position:      $('position').value.trim(),
+            employee_type: $('employmentType').value,
+            start_date:    $('startDate').value||null,
+            first_payment: parseNum($('firstPayment').value),
+            installments_per_year: parseInt($('installments').value),
+            social_security:  $('socialSecurity').checked?1:0,
+            provident_fund:   $('providentFund').checked?1:0,
+            provident_rate:   parseNum($('providentRate').value),
+            fund_member_code: $('fundMemberCode').value.trim(),
+            fund_start_date:  $('fundStartDate').value||null,
+            is_active: 1,
         };
+        const empId = await DB.saveEmployee(empData);
+        currentEmployeeId = currentEmployeeId || empId;
 
-        const updateCalcTaxBtn = () => {
-            const total = parseValue(deductionTotalInput.value);
-            calcTaxBtn.disabled = total === 0;
-        };
+        await ensureDefaultPeriod();
+        const entry = await DB.getOrCreateEntry(1, currentEmployeeId);
 
-        const calculateDeductions = () => {
-            const deductInputs = Array.from(document.querySelectorAll('#deductionTab input[type="text"]'));
-            const additionalInputs = Array.from(document.querySelectorAll('#additionalDeductionTab input[type="text"]'));
-            const allInputs = deductInputs.concat(additionalInputs).filter(input => !input.hasAttribute('readonly'));
-            const total = allInputs.reduce((sum, input) => sum + parseValue(input.value), 0);
-            deductionTotalInput.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            updateCalcTaxBtn();
-        };
+        const incomeItems = Array.from($('incomeRows').querySelectorAll('.form-row')).map(row=>({
+            income_type_id: parseInt(row.querySelector('select')?.value)||null,
+            label: row.querySelector('select')?.options[row.querySelector('select').selectedIndex]?.text,
+            amount: parseNum(row.querySelector('input[type="text"]')?.value)
+        })).filter(i=>i.amount>0);
 
-        sumDeductionsBtn.addEventListener('click', calculateDeductions);
-    </script>
+        const deductItems = Array.from($('deductRows').querySelectorAll('.form-row')).map(row=>({
+            deduction_type_id: parseInt(row.querySelector('select')?.value)||null,
+            label: row.querySelector('select')?.options[row.querySelector('select').selectedIndex]?.text,
+            amount: parseNum(row.querySelector('input[type="text"]')?.value)
+        })).filter(i=>i.amount>0);
+
+        await DB.saveIncomeItems(entry.id, incomeItems);
+        await DB.saveDeductionItems(entry.id, deductItems);
+        await DB.put('payroll_entries',{...entry,
+            total_income:    incomeItems.reduce((s,i)=>s+i.amount,0),
+            total_deduction: deductItems.reduce((s,i)=>s+i.amount,0),
+        });
+
+        const taxYear = new Date().getFullYear()+543;
+        const taData = {};
+        Object.entries(TAX_MAP).forEach(([inputId,field])=>{ taData[field]=parseNum($(inputId)?.value); });
+        taData.total_allowance = Object.values(taData).reduce((s,v)=>s+v,0);
+        await DB.saveTaxAllowances(currentEmployeeId, taxYear, taData);
+
+        await loadEmployeeList();
+        toast('✅ บันทึกข้อมูลเรียบร้อย');
+    } catch(err) {
+        console.error(err);
+        toast('❌ เกิดข้อผิดพลาด: '+err.message,'error');
+    } finally {
+        $('savingIndicator').classList.remove('visible');
+    }
+}
+
+// ── Export / Import ──
+$('btnExport').addEventListener('click', async () => {
+    const data = await DB.exportAll();
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`webpayroll_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    toast('📤 Export สำเร็จ');
+});
+$('btnImportTrigger').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change', async e=>{
+    const file=e.target.files[0]; if(!file) return;
+    try {
+        await DB.importAll(JSON.parse(await file.text()));
+        allDepartments = await DB.getDepartments(COMPANY_ID);
+        allDivisions   = await DB.all('divisions');
+        populateFilterDepts(); populateDetailDepts();
+        await loadEmployeeList();
+        toast('📥 Import สำเร็จ');
+    } catch(err){ toast('❌ Import ผิดพลาด: '+err.message,'error'); }
+    e.target.value='';
+});
+
+// ── Tabs ──
+document.querySelectorAll('.section-tabs .tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        const t=btn.dataset.target;
+        document.querySelectorAll('.section-tabs .tab').forEach(b=>b.classList.toggle('active',b===btn));
+        document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===t));
+    });
+});
+
+// ── Social Security Modal ──
+const ssModal=$('socialSecurityModal');
+const mYear=$('modalYear');
+const curYear=new Date().getFullYear()+543;
+for(let y=curYear-2;y<=curYear+2;y++){
+    const o=document.createElement('option'); o.value=y; o.textContent=y;
+    if(y===curYear) o.selected=true; mYear.appendChild(o);
+}
+$('socialSecurity').addEventListener('change', function(){ $('confirmSocialSecurity').disabled=!this.checked; });
+$('confirmSocialSecurity').addEventListener('click',()=>ssModal.style.display='flex');
+$('modalCancelBtn').addEventListener('click',()=>ssModal.style.display='none');
+ssModal.addEventListener('click',e=>{ if(e.target===ssModal) ssModal.style.display='none'; });
+$('modalConfirmBtn').addEventListener('click', async ()=>{
+    const period=parseInt($('modalInstallment').value);
+    const year=parseInt($('modalYear').value);
+    ssModal.style.display='none';
+    if(currentEmployeeId){
+        const emp=await DB.get('employees',currentEmployeeId);
+        await DB.saveEmployee({...emp, social_security:1, social_security_period:period, social_security_year:year});
+        toast(`✅ บันทึกประกันสังคม งวด ${period} ปี ${year}`);
+    }
+});
+
+// ── Provident Fund ──
+$('providentFund').addEventListener('change', function(){
+    $('providentRate').disabled=$('confirmProvidentFund').disabled=!this.checked;
+});
+$('confirmProvidentFund').addEventListener('click',()=>{
+    const r=$('providentRate').value.trim();
+    if(!r){ toast('กรุณาใส่อัตรากองทุน (%)','error'); return; }
+    toast(`✅ อัตรากองทุน ${r}%`);
+});
+
+// ── Deduction Total & Tax ──
+$('sumDeductionsBtn').addEventListener('click',()=>{
+    const inputs=[
+        ...document.querySelectorAll('#deductionTab input[type="text"]'),
+        ...document.querySelectorAll('#additionalDeductionTab input[type="text"]'),
+    ].filter(el=>!el.hasAttribute('readonly'));
+    const total=inputs.reduce((s,el)=>s+parseNum(el.value),0);
+    $('deductionTotal').value=fmt(total);
+    $('calcTaxBtn').disabled=total===0;
+});
+$('calcTaxBtn').addEventListener('click',()=>{ toast('🧮 Test 3 — คำนวณภาษีเรียบร้อย'); });
+
+boot().catch(console.error);
+</script>
 </body>
 </html>
