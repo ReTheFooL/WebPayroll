@@ -131,7 +131,7 @@
                             </div>
                             <div>
                                 <label for="firstPayment">เงินเดือนที่ได้รับจ่ายครั้งแรก</label>
-                                <input id="firstPayment" type="text" placeholder="0.00" />
+                                <input id="firstPayment" type="text" placeholder="0.0" />
                             </div>
                         </div>
                     </div>
@@ -456,31 +456,31 @@
         </div>
     </div>
     <!-- Modal ประกันสังคม -->
-    <div id="socialSecurityModal" style="display:none; position:fixed; inset:0; background:rgba(47,54,64,0.5); z-index:9999; align-items:center; justify-content:center; font-family:'Sarabun','Segoe UI',sans-serif;">
-        <div style="background:#ffffff; border:1px solid #dcdde1; border-radius:22px; width:360px; box-shadow:0 22px 50px rgba(82,88,119,0.18); overflow:hidden;">
-            <!-- Header -->
-            <div style="background:linear-gradient(135deg,#3867d6,#4b7bec); padding:18px 24px; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:1.2rem;">🗂️</span>
-                <span style="color:#fff; font-size:1.05rem; font-weight:600;">กรุณาเลือกงวดที่เหลือ</span>
+    <div id="socialSecurityModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#c0c0c0; border:2px solid #888; border-radius:4px; width:340px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4); font-family:'Sarabun','Segoe UI',sans-serif;">
+            <!-- Title bar -->
+            <div style="background:#6b6b6b; color:#fff; padding:6px 12px; font-size:0.92rem; display:flex; align-items:center; gap:8px; border-radius:2px 2px 0 0;">
+                <span>🗂</span>
+                <span>กรุณาเลือกงวดที่เหลือ</span>
             </div>
             <!-- Body -->
-            <div style="padding:28px 28px 24px; display:grid; gap:18px;">
-                <div>
-                    <label style="display:block; font-size:0.95rem; margin-bottom:6px; color:#718093;">กรุณาเลือกงวดที่เหลือ</label>
-                    <select id="modalInstallment" style="width:100%; padding:12px 14px; border:1px solid #dcdde1; border-radius:14px; background:#f8fbff; color:#2f3640; font-size:0.96rem; appearance:none; background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23718093' d='M0 0l5 6 5-6Z'/%3E%3C/svg%3E\"); background-repeat:no-repeat; background-position:right 16px center;">
-                        <option>1</option><option>2</option><option>3</option><option>4</option>
-                        <option>5</option><option>6</option><option>7</option><option>8</option>
-                        <option>9</option><option>10</option><option>11</option>
-                        <option selected>12</option>
-                    </select>
+            <div style="padding:24px 28px 20px;">
+                <p style="margin:0 0 14px; font-size:0.97rem; color:#222;">กรุณาเลือกงวดที่เหลือ</p>
+                <select id="modalInstallment" style="width:160px; padding:6px 10px; border:1px solid #888; border-radius:3px; background:#fff; font-size:0.95rem; margin-bottom:16px;">
+                    <option>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                    <option>9</option><option>10</option><option>11</option>
+                    <option selected>12</option>
+                </select>
+
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                    <label style="font-size:0.97rem; color:#222; margin:0; white-space:nowrap;">ปีภาษี</label>
+                    <select id="modalYear" style="width:120px; padding:6px 10px; border:1px solid #888; border-radius:3px; background:#fff; font-size:0.95rem;"></select>
                 </div>
-                <div>
-                    <label style="display:block; font-size:0.95rem; margin-bottom:6px; color:#718093;">ปีภาษี</label>
-                    <select id="modalYear" style="width:100%; padding:12px 14px; border:1px solid #dcdde1; border-radius:14px; background:#f8fbff; color:#2f3640; font-size:0.96rem; appearance:none; background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23718093' d='M0 0l5 6 5-6Z'/%3E%3C/svg%3E\"); background-repeat:no-repeat; background-position:right 16px center;"></select>
-                </div>
-                <div style="display:flex; gap:12px; margin-top:4px;">
-                    <button id="modalConfirmBtn" style="flex:1; background:#3867d6; color:#fff; border:none; border-radius:14px; padding:12px 18px; font-size:0.98rem; font-family:inherit; cursor:pointer; box-shadow:0 14px 30px rgba(56,103,214,0.18); transition:transform 0.2s;">ยืนยัน</button>
-                    <button id="modalCancelBtn" style="flex:1; background:#ffffff; color:#2f3640; border:1px solid #dcdde1; border-radius:14px; padding:12px 18px; font-size:0.98rem; font-family:inherit; cursor:pointer; transition:transform 0.2s;">ยกเลิก</button>
+
+                <div style="display:flex; justify-content:center; gap:12px; margin-top:22px;">
+                    <button id="modalConfirmBtn" style="background:#4cd964; color:#fff; border:1px solid #2ea84f; border-radius:4px; padding:8px 32px; font-size:1rem; cursor:pointer; font-family:inherit;">ยืนยัน</button>
+                    <button id="modalCancelBtn" style="background:#ff4757; color:#fff; border:1px solid #c0392b; border-radius:4px; padding:8px 32px; font-size:1rem; cursor:pointer; font-family:inherit;">ยกเลิก</button>
                 </div>
             </div>
         </div>
