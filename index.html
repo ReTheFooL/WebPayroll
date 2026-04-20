@@ -140,6 +140,8 @@
                 <div class="section-tabs">
                     <div class="tab active" data-target="incomeTab">รายรับ</div>
                     <div class="tab" data-target="deductTab">รายการหัก</div>
+                    <div class="tab" data-target="deductionTab">ค่าลดหย่อน</div>
+                    <div class="tab" data-target="additionalDeductionTab">ค่าลดหย่อนเพิ่มเติม</div>
                 </div>
 
                 <div class="tab-content">
@@ -206,59 +208,245 @@
                     <div class="tab-panel" id="deductTab">
                         <div class="card">
                             <h3 style="margin-top:0; font-size:1rem;">รายการหัก</h3>
-                            <div class="form-row sm">
+                            <div class="deduct-grid">
+                                <div class="deduct-items">
+                                    <div class="form-row sm">
+                                        <div>
+                                            <select>
+                                                <option>เงินสมทบ</option>
+                                                <option>ค่าเบี้ยเลี้ยง</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="จำนวน" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row sm" style="margin-top: 12px;">
+                                        <div>
+                                            <select>
+                                                <option>เงินหักอื่น</option>
+                                                <option>ค่าเดินทาง</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="จำนวน" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row sm" style="margin-top: 12px;">
+                                        <div>
+                                            <select>
+                                                <option>ภาษี</option>
+                                                <option>ประกันสังคม</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="จำนวน" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row sm" style="margin-top: 12px;">
+                                        <div>
+                                            <select>
+                                                <option>เงินกู้</option>
+                                                <option>ค่าปรับ</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="จำนวน" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row sm" style="margin-top: 12px;">
+                                        <div>
+                                            <select>
+                                                <option>เงินหักอื่นๆ</option>
+                                                <option>ค่าใช้จ่าย</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="จำนวน" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <aside class="deduct-meta">
+                                    <div class="meta-section">
+                                        <div class="checkbox-group">
+                                            <input id="socialSecurity" type="checkbox" />
+                                            <label for="socialSecurity">คำนวณประกันสังคม</label>
+                                        </div>
+                                        <button class="button--secondary small" id="confirmSocialSecurity">ยืนยันประกันสังคม</button>
+                                    </div>
+                                    <div class="meta-section">
+                                        <div class="checkbox-group">
+                                            <input id="providentFund" type="checkbox" />
+                                            <label for="providentFund">คำนวณกองทุนสำรองเลี้ยงชีพ</label>
+                                        </div>
+                                        <div class="form-row sm meta-row" style="margin-top: 10px;">
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <input id="providentRate" type="text" placeholder="อัตรา (%)" style="flex: 1;" />
+                                                <button class="button--secondary small" id="confirmProvidentFund">ยืนยันสำรองเลี้ยงชีพ</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </aside>
+                            </div>
+                            <div class="form-row sm" style="margin-top: 18px;">
                                 <div>
-                                    <select>
-                                        <option>เงินสมทบ</option>
-                                        <option>ค่าเบี้ยเลี้ยง</option>
-                                    </select>
+                                    <label for="fundMemberCode">รหัสสมาชิกกองทุน</label>
+                                    <input id="fundMemberCode" type="text" placeholder="รหัสสมาชิกกองทุน" />
                                 </div>
                                 <div>
-                                    <input type="text" placeholder="จำนวน" />
+                                    <label for="fundStartDate">วันที่สมัครกองทุน</label>
+                                    <input id="fundStartDate" type="date" />
                                 </div>
                             </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>เงินหักอื่น</option>
-                                        <option>ค่าเดินทาง</option>
-                                    </select>
+                        </div>
+                    </div>
+                    <div class="tab-panel" id="deductionTab">
+                        <div class="card">
+                            <h3 style="margin-top:0; font-size:1rem;">ค่าลดหย่อน</h3>
+                            <div class="deduction-list">
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>1. ผู้มีเงินได้ 60,000 บาท</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" value="60,000.00" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>2. คู่สมรส (กรณีไม่มีรายได้) 60,000 บาท</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>3. บุตรคนละ 30,000 บาท ไม่จำกัดจำนวนบุตร</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>4. เบี้ยประกันชีวิต</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>5. เงินสะสม (กองทุนเลี้ยงชีพ) ส่วนที่ไม่เกิน 10,000 บาท</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>6. ค่าซื้อหน่วยลงทุนในกองทุนรวมเพื่อการเลี้ยงชีพ</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>7. ดอกเบี้ยเงินกู้</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>8. เงินสมทบ (ประกันสังคม)</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px;">
+                                    <div>
+                                        <label>9. เงินบริจาค</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top: 12px; margin-bottom: 4px;">
+                                    <div>
+                                        <label>10. ค่าซื้อหน่วยลงทุนในกองทุนรวมหุ้นระยะยาว</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>ภาษี</option>
-                                        <option>ประกันสังคม</option>
-                                    </select>
+                        </div>
+                    </div>
+                    <div class="tab-panel" id="additionalDeductionTab">
+                        <div class="card">
+                            <h3 style="margin-top:0; font-size:1rem;">ค่าลดหย่อนเพิ่มเติม</h3>
+                            <div class="additional-deduction-grid">
+                                <div class="form-row four" style="margin-top: 16px;">
+                                    <div>
+                                        <label>บิดา/ผู้มีเงินได้</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>มารดาผู้มีเงินได้</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>บิดาคู่สมรส</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>มารดาคู่สมรส</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
+                                <div class="deduction-divider"><span>เบี้ยประกันสุขภาพ</span></div>
+                                <div class="form-row four" style="margin-top: 16px;">
+                                    <div>
+                                        <label>บิดาผู้มีเงินได้</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>มารดาผู้มีเงินได้</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>บิดาคู่สมรส</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>มารดาคู่สมรส</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>เงินกู้</option>
-                                        <option>ค่าปรับ</option>
-                                    </select>
+                                <div class="deduction-divider"></div>
+                                <div class="form-row three" style="margin-top: 16px;">
+                                    <div>
+                                        <label>อุปการะคนพิการ</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>เบี้ยประกันชีวิตแบบบำนาญ</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label>อื่นๆ</label>
+                                        <input type="text" placeholder="0.00" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
-                                </div>
-                            </div>
-                            <div class="form-row sm" style="margin-top: 12px;">
-                                <div>
-                                    <select>
-                                        <option>เงินหักอื่นๆ</option>
-                                        <option>ค่าใช้จ่าย</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="จำนวน" />
+                                <div class="form-controls" style="margin-top: 20px; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                                    <button class="button" type="button">คำนวณภาษี</button>
+                                    <button class="button--secondary" type="button" id="sumDeductionsBtn">รวมค่าลดหย่อน</button>
+                                    <input id="deductionTotal" type="text" readonly placeholder="ผลรวมค่าลดหย่อน" style="width: 40%; max-width: 240px;" />
                                 </div>
                             </div>
                         </div>
@@ -280,6 +468,64 @@
                 tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
             });
         });
+
+        // จัดการปุ่มยืนยันประกันสังคม
+        const socialSecurityCheckbox = document.getElementById('socialSecurity');
+        const confirmSocialSecurityBtn = document.getElementById('confirmSocialSecurity');
+
+        socialSecurityCheckbox.addEventListener('change', function() {
+            confirmSocialSecurityBtn.disabled = !this.checked;
+        });
+
+        // ตั้งค่าเริ่มต้น
+        confirmSocialSecurityBtn.disabled = !socialSecurityCheckbox.checked;
+
+        // เพิ่ม event สำหรับปุ่มยืนยันประกันสังคม
+        confirmSocialSecurityBtn.addEventListener('click', function() {
+            alert('test');
+        });
+
+        // จัดการกองทุนสำรองเลี้ยงชีพ
+        const providentFundCheckbox = document.getElementById('providentFund');
+        const providentRateInput = document.getElementById('providentRate');
+        const confirmProvidentFundBtn = document.getElementById('confirmProvidentFund');
+
+        providentFundCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            confirmProvidentFundBtn.disabled = !isChecked;
+            providentRateInput.disabled = !isChecked;
+        });
+
+        // ตั้งค่าเริ่มต้น
+        confirmProvidentFundBtn.disabled = !providentFundCheckbox.checked;
+        providentRateInput.disabled = !providentFundCheckbox.checked;
+
+        // เพิ่ม event สำหรับปุ่มยืนยันกองทุนสำรองเลี้ยงชีพ
+        confirmProvidentFundBtn.addEventListener('click', function() {
+            if (providentRateInput.value.trim() === '') {
+                alert('กรุณาใส่อัตรากองคำนวณกองทุนสำรองเลี้ยงชีพ');
+            } else {
+                alert('ข้อความ Test 2');
+            }
+        });
+
+        const sumDeductionsBtn = document.getElementById('sumDeductionsBtn');
+        const deductionTotalInput = document.getElementById('deductionTotal');
+
+        const parseValue = value => {
+            const number = parseFloat(value.replace(/,/g, '').trim());
+            return Number.isFinite(number) ? number : 0;
+        };
+
+        const calculateDeductions = () => {
+            const deductInputs = Array.from(document.querySelectorAll('#deductionTab input[type="text"]'));
+            const additionalInputs = Array.from(document.querySelectorAll('#additionalDeductionTab input[type="text"]'));
+            const allInputs = deductInputs.concat(additionalInputs).filter(input => !input.hasAttribute('readonly'));
+            const total = allInputs.reduce((sum, input) => sum + parseValue(input.value), 0);
+            deductionTotalInput.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        sumDeductionsBtn.addEventListener('click', calculateDeductions);
     </script>
 </body>
 </html>
